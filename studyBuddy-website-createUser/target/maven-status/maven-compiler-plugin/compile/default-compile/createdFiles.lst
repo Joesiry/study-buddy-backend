@@ -1,2 +1,4 @@
-register\package-info.class
 register\RegisterUserHandler.class
+utils\package-info.class
+register\package-info.class
+utils\HashingHelper.class

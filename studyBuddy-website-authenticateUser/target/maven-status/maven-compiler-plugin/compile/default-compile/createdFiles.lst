@@ -1,3 +1,4 @@
-authenticate\HashingHelper.class
 authenticate\package-info.class
 authenticate\LoginHandler.class
+utils\package-info.class
+utils\HashingHelper.class
