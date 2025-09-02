@@ -27,8 +27,8 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
             String lastName = body.getString("last_name");
             String username = body.getString("username");
             String password = body.getString("password");
-            String industry = body.optString("industry", null); // optional
-            String userRole = body.optString("user_role", null); // optional
+            String industry = body.getString("industry");
+            String userRole = body.getString("user_role");
             String bio = body.optString("bio", null); // optional
 
             // Hash password
@@ -51,8 +51,14 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 
         } catch (SQLIntegrityConstraintViolationException e) {
             response.put("error", "Username already exists"); // Username taken
+            response.put("statusCode", 409);
         } catch (Exception e) {
             response.put("error", e.getMessage()); // Big error
+            response.put("statusCode", 500);
+            response.put("body", new JSONObject()
+                .put("error", "Internal server error")
+                .put("details", e.getMessage())
+                .toString());
         }
 
         return response.toString();
