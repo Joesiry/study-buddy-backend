@@ -4,21 +4,13 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.json.JSONObject;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.*;
-import java.util.Base64;
 import java.util.Map;
 
+import utils.HashingHelper;
+
 public class RegisterUserHandler implements RequestHandler<Map<String, Object>, String> {
-
-    // 🔹 Hash password with SHA-256 (not as secure as BCrypt, but built-in)
-    private String hashPassword(String password) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(password.getBytes());
-        return Base64.getEncoder().encodeToString(hash); // store as Base64 string
-    }
-
+	
     @Override
     public String handleRequest(Map<String, Object> event, Context context) {
         JSONObject response = new JSONObject();
@@ -30,17 +22,28 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 
             // Parse input from API Gateway
             JSONObject body = new JSONObject((String) event.get("body"));
+            
+            String firstName = body.getString("first_name");
+            String lastName = body.getString("last_name");
             String username = body.getString("username");
             String password = body.getString("password");
+            String industry = body.optString("industry", null); // optional
+            String userRole = body.optString("user_role", null); // optional
+            String bio = body.optString("bio", null); // optional
 
             // Hash password
-            String hashedPassword = hashPassword(password);
+            String hashedPassword = HashingHelper.hashPassword(password);
 
             // Insert into database
-            String sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)";
+            String sql = "INSERT INTO users (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                stmt.setString(2, hashedPassword);
+                stmt.setString(1, firstName);
+                stmt.setString(2, lastName);
+                stmt.setString(3, username);
+                stmt.setString(4, hashedPassword);
+                stmt.setString(5, industry);
+                stmt.setString(6, userRole);
+                stmt.setString(7, bio);
                 stmt.executeUpdate();
             }
 
