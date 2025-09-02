@@ -35,7 +35,7 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
             String hashedPassword = HashingHelper.hashPassword(password);
 
             // Insert into database
-            String sql = "INSERT INTO users (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO app_user (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, firstName);
                 stmt.setString(2, lastName);

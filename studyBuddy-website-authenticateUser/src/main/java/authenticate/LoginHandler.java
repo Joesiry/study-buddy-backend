@@ -28,7 +28,7 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 			String username = body.getString("username");
 			String password = body.getString("password");
 
-			String query = "SELECT hashed_password FROM users WHERE username = ?";
+			String query = "SELECT hashed_password FROM app_user WHERE username = ?";
 			try (PreparedStatement stmt = conn.prepareStatement(query)) {
 				stmt.setString(1, username);
 				ResultSet rs = stmt.executeQuery();
