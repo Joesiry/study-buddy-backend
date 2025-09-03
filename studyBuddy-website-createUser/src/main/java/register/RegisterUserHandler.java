@@ -5,15 +5,17 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.json.JSONObject;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Map;
 
 import utils.HashingHelper;
 
-public class RegisterUserHandler implements RequestHandler<Map<String, Object>, String> {
+public class RegisterUserHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 	
     @Override
-    public String handleRequest(Map<String, Object> event, Context context) {
-        JSONObject response = new JSONObject();
+    public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
+    	Map<String, Object> responseMap = new HashMap<>();
+        JSONObject responseBody = new JSONObject();
 
         try (Connection conn = DriverManager.getConnection(
                 System.getenv("DB_URL"), 
@@ -47,20 +49,29 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
                 stmt.executeUpdate();
             }
 
-            response.put("message", "User registered successfully"); // User registered successfully
+            responseBody.put("message", "User registered successfully"); // User registered successfully
+            buildResponse(responseMap, 200, responseBody.toString());
 
-        } catch (SQLIntegrityConstraintViolationException e) {
-            response.put("error", "Username already exists"); // Username taken
-            response.put("statusCode", 409);
+        } catch (SQLException e) {
+        	if ("23505".equals(e.getSQLState())) { // unique_violation in PostgreSQL
+        		responseBody.put("error", "Username already exists");
+        		buildResponse(responseMap, 409, responseBody.toString());
+        	} else {
+        		responseBody.put("error", "Database error: " + e.getMessage());
+        		buildResponse(responseMap, 500, responseBody.toString());
+        	}
         } catch (Exception e) {
-            response.put("error", e.getMessage()); // Big error
-            response.put("statusCode", 500);
-            response.put("body", new JSONObject()
-                .put("error", "Internal server error")
-                .put("details", e.getMessage())
-                .toString());
+        	responseBody.put("error", "Internal server error: " + e.getMessage());
+        	buildResponse(responseMap, 500, responseBody.toString());
         }
 
-        return response.toString();
+        return responseMap;
     }
+    
+    private void buildResponse(Map<String, Object> responseMap, int statusCode, String body) {
+        responseMap.put("statusCode", statusCode);
+        responseMap.put("headers", Map.of("Content-Type", "application/json"));
+        responseMap.put("body", body);
+    }
+    
 }

@@ -20,11 +20,12 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 	private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
     
 	@Override
-	public Map<String, Object> handleRequest(Map<String, Object> input, Context context) {
-		Map<String, Object> response = new HashMap<>();
+	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
+        Map<String, Object> responseMap = new HashMap<>();
+        JSONObject responseBody = new JSONObject();
 
 		try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-			JSONObject body = new JSONObject((String) input.get("body"));
+			JSONObject body = new JSONObject((String) event.get("body"));
 			String username = body.getString("username");
 			String password = body.getString("password");
 
@@ -34,25 +35,31 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 				ResultSet rs = stmt.executeQuery();
 
 				if (rs.next()) {
-					String storedHash = rs.getString("password_hash");
+                    String storedHash = rs.getString("hashed_password");
 
-					if (HashingHelper.verifyPassword(password, storedHash)) {
-                        response.put("statusCode", 200);
-                        response.put("body", "{\"message\":\"Login successful\"}"); // Sign in success
+                    if (HashingHelper.verifyPassword(password, storedHash)) {
+                        responseBody.put("message", "Login successful");
+                        buildResponse(responseMap, 200, responseBody.toString());
                     } else {
-                        response.put("statusCode", 401);
-                        response.put("body", "{\"message\":\"Invalid credentials\"}"); // Password wrong
+                        responseBody.put("error", "Invalid credentials");
+                        buildResponse(responseMap, 401, responseBody.toString());
                     }
-				} else {
-					response.put("statusCode", 404);
-					response.put("body", "{\"message\":\"User not found\"}"); // No user found
-				}
-			}
-		} catch (Exception e) {
-			response.put("statusCode", 500);
-			response.put("body", "{\"error\":\"" + e.getMessage() + "\"}"); // Big error in code
-		}
+                } else {
+                    responseBody.put("error", "User not found");
+                    buildResponse(responseMap, 404, responseBody.toString());
+                }
+            }
+        } catch (Exception e) {
+            responseBody.put("error", "Internal server error: " + e.getMessage());
+            buildResponse(responseMap, 500, responseBody.toString());
+        }
 
-		return response;
+        return responseMap;
 	}
+	
+	private void buildResponse(Map<String, Object> responseMap, int statusCode, String body) {
+        responseMap.put("statusCode", statusCode);
+        responseMap.put("headers", Map.of("Content-Type", "application/json"));
+        responseMap.put("body", body);
+    }
 }
