@@ -10,6 +10,9 @@ import java.util.Map;
 
 import utils.HashingHelper;
 
+/**
+ * Registration handler. Creates user, returning proper HTTP status code and response
+ */
 public class RegisterUserHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 	
     @Override
@@ -51,18 +54,32 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 
             responseBody.put("message", "User registered successfully"); // User registered successfully
             buildResponse(responseMap, 200, responseBody.toString());
+            
+            // Log
+            System.out.println("User registered successfully: " + username);
 
         } catch (SQLException e) {
         	if ("23505".equals(e.getSQLState())) { // unique_violation in PostgreSQL
         		responseBody.put("error", "Username already exists");
         		buildResponse(responseMap, 409, responseBody.toString());
+        		
+        		// Log
+                System.err.println("Failed to register user. Username already exists");
         	} else {
         		responseBody.put("error", "Database error: " + e.getMessage());
         		buildResponse(responseMap, 500, responseBody.toString());
+        		
+        		// Log
+                System.err.println("Failed to register user. Error in database: " + e.getMessage());
+                e.printStackTrace();
         	}
         } catch (Exception e) {
         	responseBody.put("error", "Internal server error: " + e.getMessage());
         	buildResponse(responseMap, 500, responseBody.toString());
+        	
+        	// Log
+            System.err.println("Failed to register user. Error in RegisterUserHandler: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return responseMap;

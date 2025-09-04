@@ -40,18 +40,31 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
                     if (HashingHelper.verifyPassword(password, storedHash)) {
                         responseBody.put("message", "Login successful");
                         buildResponse(responseMap, 200, responseBody.toString());
+                        
+                        // Log
+                        System.out.println("Login successful for user: " + username);
                     } else {
                         responseBody.put("error", "Invalid credentials");
                         buildResponse(responseMap, 401, responseBody.toString());
+                        
+                        // Log
+                        System.out.println("Invalid password for user: " + username);
                     }
                 } else {
                     responseBody.put("error", "User not found");
                     buildResponse(responseMap, 404, responseBody.toString());
+                    
+                    // Log
+                    System.out.println("User not found: " + username);
                 }
             }
         } catch (Exception e) {
             responseBody.put("error", "Internal server error: " + e.getMessage());
             buildResponse(responseMap, 500, responseBody.toString());
+            
+            // Log
+            System.out.println("Error in LoginHandler: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return responseMap;
