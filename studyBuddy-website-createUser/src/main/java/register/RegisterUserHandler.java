@@ -25,8 +25,19 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
                 System.getenv("DB_USER"), 
                 System.getenv("DB_PASSWORD"))) {
 
-            // Parse input from API Gateway
-            JSONObject body = new JSONObject((String) event.get("body"));
+            // Parse input
+        	Object bodyObj = event.get("body");
+        	JSONObject body;
+
+        	if (bodyObj instanceof String) {
+        	    // API Gateway proxy event
+        	    body = new JSONObject((String) bodyObj);
+        	} else if (bodyObj instanceof Map) {
+        	    // Direct Lambda test with JSON object
+        	    body = new JSONObject((Map) bodyObj);
+        	} else {
+        	    throw new IllegalArgumentException("Invalid input format for RegisterUserHandler");
+        	}
             
             String firstName = body.getString("first_name");
             String lastName = body.getString("last_name");
