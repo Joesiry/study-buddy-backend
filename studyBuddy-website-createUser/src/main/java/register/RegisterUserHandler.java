@@ -25,8 +25,21 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
                 System.getenv("DB_USER"), 
                 System.getenv("DB_PASSWORD"))) {
 
-            // Parse input from API Gateway
-            JSONObject body = new JSONObject((String) event.get("body"));
+            // Accept both API Gateway (body as string) and direct JSON (fields at top level)
+            JSONObject body;
+            Object bodyObj = event.get("body");
+            if (bodyObj instanceof String) {
+                // API Gateway: body is a JSON string
+                body = new JSONObject((String) bodyObj);
+            } else if (bodyObj instanceof Map) {
+                // Local/direct: body is already a map
+                body = new JSONObject((Map<?, ?>) bodyObj);
+            } else if (bodyObj == null) {
+                // No "body" key, treat event itself as the body (for local direct JSON)
+                body = new JSONObject(event);
+            } else {
+                throw new IllegalArgumentException("Invalid event format");
+            }
             
             String firstName = body.getString("first_name");
             String lastName = body.getString("last_name");
