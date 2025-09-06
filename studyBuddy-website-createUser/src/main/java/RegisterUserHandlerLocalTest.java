@@ -29,13 +29,3 @@ public class RegisterUserHandlerLocalTest {
 }
 
 
-/**
- * Must be in command prompt, within the correct folder for the function to execute:
- * 
-   set DB_URL=jdbc:postgresql://database-1.c8tga68k2zvm.us-east-1.rds.amazonaws.com:5432/studybuddy
-   set DB_USER=postgres
-   set DB_PASSWORD=DATA4y0u!
-   mvn exec:java -Dexec.mainClass="register.RegisterUserHandlerLocalTest"
- * 
- *
- */
