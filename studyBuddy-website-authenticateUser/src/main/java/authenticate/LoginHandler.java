@@ -25,7 +25,20 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
         JSONObject responseBody = new JSONObject();
 
 		try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-			JSONObject body = new JSONObject((String) event.get("body"));
+			Object bodyObj = event.get("body");
+			JSONObject body;
+
+			if (bodyObj instanceof String) {
+			    // API Gateway event
+			    body = new JSONObject((String) bodyObj);
+			} else if (bodyObj instanceof Map) {
+				// Direct Lambda test with JSON object
+			    body = new JSONObject((Map) bodyObj);
+			} else {
+			    throw new IllegalArgumentException("Invalid input format for LoginUserHandler");
+			}
+
+			
 			String username = body.getString("username");
 			String password = body.getString("password");
 
