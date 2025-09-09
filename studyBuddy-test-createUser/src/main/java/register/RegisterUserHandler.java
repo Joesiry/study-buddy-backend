@@ -19,7 +19,16 @@ import utils.HashingHelper;
  */
 public class RegisterUserHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
-	private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(System.getenv("JWT_KEY").getBytes());
+	private static final SecretKey SECRET_KEY;
+
+	static {
+	    String jwtKey = System.getProperty("JWT_KEY", System.getenv("JWT_KEY"));
+	    if (jwtKey == null || jwtKey.length() < 32) {
+	        throw new IllegalStateException("JWT_KEY must be defined and at least 32 characters long");
+	    }
+	    SECRET_KEY = Keys.hmacShaKeyFor(jwtKey.getBytes());
+	}
+
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
@@ -27,9 +36,9 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 		JSONObject responseBody = new JSONObject();
 
 		try (Connection conn = DriverManager.getConnection(
-				System.getenv("DB_URL"), 
-				System.getenv("DB_USER"), 
-				System.getenv("DB_PASSWORD"))) {
+				"jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", 
+				"", 
+				"")) {
 
 			// Accept both API Gateway (body as string) and direct JSON (fields at top level)
 			JSONObject body;
@@ -59,8 +68,8 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 			String hashedPassword = HashingHelper.hashPassword(password);
 
 			// Insert into database
-			String sql = "INSERT INTO app_user (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING user_id";
-			try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+			String sql = "INSERT INTO app_user (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?)";
+			try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 				stmt.setString(1, firstName);
 				stmt.setString(2, lastName);
 				stmt.setString(3, username);
@@ -69,7 +78,9 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 				stmt.setString(6, userRole);
 				stmt.setString(7, bio);
 
-				ResultSet rs = stmt.executeQuery();
+				stmt.executeUpdate();
+				
+				ResultSet rs = stmt.getGeneratedKeys();
 				if (rs.next()) {
 					// Retrieve user_id for JWT
 					int userId = rs.getInt("user_id");

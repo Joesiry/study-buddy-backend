@@ -46,15 +46,13 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 				throw new IllegalArgumentException("Invalid event format");
 			}
 
-
 			String username = body.getString("username");
 			String password = body.getString("password");
-
 			String query = "SELECT user_id, hashed_password FROM app_user WHERE username = ?";
+			
 			try (PreparedStatement stmt = conn.prepareStatement(query)) {
 				stmt.setString(1, username);
 				ResultSet rs = stmt.executeQuery();
-
 				if (rs.next()) {
 					String storedHash = rs.getString("hashed_password");
 					int userId = rs.getInt("user_id");
