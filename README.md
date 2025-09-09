@@ -25,21 +25,26 @@ It is built as a collection of **AWS Lambda functions**, using **Java 21**, **Po
 
 ---
 
-## Project src/
+## Project Structure
 
-### authenticate/
+src/
 
-LoginHandler.java # User login + JWT generation
+├── authenticate/
 
-### register/
+│ └── LoginHandler.java # User login + JWT generation
 
-RegisterUserHandler.java # User registration + JWT generation
+├── register/
 
-### utils/
+│ └── RegisterUserHandler.java # User registration + JWT generation
 
-HashingHelper.java # Password hashing (SHA256)
+├── utils/
 
-JwtHelper.java # JWT signing & validation (*IN DEVELOPMENT*)
+│ ├── HashingHelper.java # Password hashing (SHA256)
+
+│ └── JwtHelper.java # JWT signing & validation (*IN DEVELOPMENT*)
+
+└── … (future)
+
 
 ---
 
