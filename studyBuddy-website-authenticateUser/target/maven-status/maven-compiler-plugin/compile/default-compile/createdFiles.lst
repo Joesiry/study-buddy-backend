@@ -1,4 +1,5 @@
 authenticate\package-info.class
+utils\JwtHelper.class
 authenticate\LoginHandler.class
 utils\package-info.class
 utils\HashingHelper.class

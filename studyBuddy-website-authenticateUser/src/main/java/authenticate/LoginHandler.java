@@ -7,12 +7,9 @@ import org.json.JSONObject;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
-import java.util.Date;
 
 import utils.HashingHelper;
+import utils.JwtHelper;
 
 /**
  * Login handler. Checks if user information is correct and returns HTTP status code and response.
@@ -22,7 +19,6 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 	private static final String DB_URL = System.getenv("DB_URL");
 	private static final String DB_USER = System.getenv("DB_USER");
 	private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
-	private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(System.getenv("JWT_KEY").getBytes());
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
@@ -59,14 +55,8 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 
 					if (HashingHelper.verifyPassword(password, storedHash)) {
 						// Generate JWT
-						String jwt = Jwts.builder()
-								.subject(String.valueOf(userId))
-								.claim("username", username)
-								.issuedAt(new Date())
-								.expiration(new Date(System.currentTimeMillis() + 3600_000)) // 1 hour
-								.signWith(SECRET_KEY)
-								.compact();
-
+						String jwt = JwtHelper.generateToken(userId, username);
+						
 						responseBody.put("message", "Login successful");
 						responseBody.put("username", username);
 						responseBody.put("user_id", userId);
@@ -95,13 +85,19 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 			buildResponse(responseMap, 500, responseBody.toString());
 
 			// Log
-			System.out.println("Error in LoginHandler: " + e.getMessage());
+			System.err.println("Error in LoginHandler: " + e.getMessage());
 			e.printStackTrace();
 		}
 
 		return responseMap;
 	}
 
+	/**
+	 * Helper method to build JSON response before returning.
+	 * @param responseMap
+	 * @param statusCode
+	 * @param body
+	 */
 	private void buildResponse(Map<String, Object> responseMap, int statusCode, String body) {
 		responseMap.put("statusCode", statusCode);
 		responseMap.put("headers", Map.of("Content-Type", "application/json"));

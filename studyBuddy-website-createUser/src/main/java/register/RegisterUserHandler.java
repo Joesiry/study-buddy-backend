@@ -13,6 +13,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 
 import utils.HashingHelper;
+import utils.JwtHelper;
 
 /**
  * Registration handler. Creates user, returning proper HTTP status code and response
@@ -75,13 +76,7 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 					int userId = rs.getInt("user_id");
 
 					// Generate JWT
-					String jwt = Jwts.builder()
-							.subject(String.valueOf(userId))
-							.claim("username", username)
-							.issuedAt(new Date())
-							.expiration(new Date(System.currentTimeMillis() + 3600_000)) // 1 hour
-							.signWith(SECRET_KEY)
-							.compact();
+					String jwt = JwtHelper.generateToken(userId, username);
 
 					responseBody.put("message", "User registered successfully"); // User registered successfully
 					responseBody.put("username", username);
