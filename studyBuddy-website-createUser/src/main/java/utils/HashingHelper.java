@@ -6,7 +6,7 @@ import java.util.Base64;
 
 /**
  * Utility class for hashing and verifying passwords.
- * Uses SHA-256 with Base64 encoding (matches RegisterUserHandler).
+ * Uses SHA-256 with Base64 encoding.
  */
 public class HashingHelper {
 

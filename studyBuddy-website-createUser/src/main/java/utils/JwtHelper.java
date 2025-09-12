@@ -1,5 +1,8 @@
 package utils;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -58,16 +61,37 @@ public class JwtHelper {
 		return generateToken(userId, username, Map.of());
 	}
 
+	// Parse & validate JWT, return Claims
+	public static Claims parseToken(String token) throws JwtValidationException {
+		try {
+			return Jwts.parser()
+					.verifyWith(SECRET_KEY)  // validates the signature
+					.build()
+					.parseSignedClaims(token) // throws JwtException if invalid/expired
+					.getPayload();
+		} catch (ExpiredJwtException e) {
+			// Token expired 401 Unauthorized
+			throw new JwtValidationException("Token expired", 401);
+
+		} catch (JwtException e) {
+			throw new JwtValidationException("Invalid token", 403);
+		}
+	}
+
 	// Validate token
-	public static boolean validateToken(String token) {
+	public static boolean validateToken(String token) throws JwtValidationException {
 		try {
 			Jwts.parser()
 			.verifyWith(SECRET_KEY)
 			.build()
 			.parseSignedClaims(token);
 			return true;
-		} catch (Exception e) {
-			return false;
+		} catch (ExpiredJwtException e) {
+			// Token expired 401 Unauthorized
+			throw new JwtValidationException("Token expired", 401);
+
+		} catch (JwtException e) {
+			throw new JwtValidationException("Invalid token", 403);
 		}
 	}
 }

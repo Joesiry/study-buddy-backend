@@ -10,6 +10,7 @@ import java.util.Map;
 
 import utils.HashingHelper;
 import utils.JwtHelper;
+import utils.JwtValidationException;
 
 /**
  * Login handler. Checks if user information is correct and returns HTTP status code and response.
@@ -22,8 +23,7 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
-		Map<String, Object> responseMap = new HashMap<>();
-		JSONObject responseBody = new JSONObject();
+		Map<String, Object> response = new HashMap<>();
 
 		try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
 			// Accept both API Gateway (body as string) and direct JSON (fields at top level)
@@ -55,52 +55,46 @@ public class LoginHandler implements RequestHandler<Map<String, Object>, Map<Str
 
 					if (HashingHelper.verifyPassword(password, storedHash)) {
 						// Generate JWT
-						String jwt = JwtHelper.generateToken(userId, username);
-						
-						responseBody.put("message", "Login successful");
-						responseBody.put("username", username);
-						responseBody.put("user_id", userId);
-						responseBody.put("token", jwt);
-						buildResponse(responseMap, 200, responseBody.toString());
+                        String jwt = JwtHelper.generateToken(userId, username);
+
+                        response.put("statusCode", 200);
+                        response.put("body", new JSONObject()
+                                .put("message", "Login successful")
+                                .put("token", jwt)
+                                .toString());
 
 						// Log
 						System.out.println("Login successful for user: " + username);
 					} else {
-						responseBody.put("error", "Invalid credentials");
-						buildResponse(responseMap, 401, responseBody.toString());
+                        response.put("statusCode", 401);
+                        response.put("body", "{\"message\":\"Invalid credentials\"}");
 
 						// Log
 						System.out.println("Invalid password for user: " + username);
 					}
 				} else {
-					responseBody.put("error", "User not found");
-					buildResponse(responseMap, 404, responseBody.toString());
+                    response.put("statusCode", 404);
+                    response.put("body", "{\"message\":\"User not found\"}");
 
 					// Log
 					System.out.println("User not found: " + username);
 				}
 			}
-		} catch (Exception e) {
-			responseBody.put("error", "Internal server error: " + e.getMessage());
-			buildResponse(responseMap, 500, responseBody.toString());
+		}  /*catch (JwtValidationException e) { // FUTURE
+            response.put("statusCode", e.getStatusCode());
+            response.put("body", new JSONObject()
+                    .put("error", e.getMessage())
+                    .toString());
 
-			// Log
-			System.err.println("Error in LoginHandler: " + e.getMessage());
-			e.printStackTrace();
-		}
+        }*/ catch (Exception e) {
+            response.put("statusCode", 500);
+            response.put("body", new JSONObject()
+                    .put("error", "Internal server error")
+                    .put("details", e.getMessage())
+                    .toString());
+        }
 
-		return responseMap;
+        return response;
 	}
 
-	/**
-	 * Helper method to build JSON response before returning.
-	 * @param responseMap
-	 * @param statusCode
-	 * @param body
-	 */
-	private void buildResponse(Map<String, Object> responseMap, int statusCode, String body) {
-		responseMap.put("statusCode", statusCode);
-		responseMap.put("headers", Map.of("Content-Type", "application/json"));
-		responseMap.put("body", body);
-	}
 }

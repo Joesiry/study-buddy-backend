@@ -7,10 +7,6 @@ import org.json.JSONObject;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
-import java.util.Date;
 
 import utils.HashingHelper;
 import utils.JwtHelper;
@@ -19,8 +15,6 @@ import utils.JwtHelper;
  * Registration handler. Creates user, returning proper HTTP status code and response
  */
 public class RegisterUserHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
-
-	private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(System.getenv("JWT_KEY").getBytes());
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
