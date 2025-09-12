@@ -1,0 +1,74 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>buddy</groupId>
+  <artifactId>studyBuddy-website-createUser</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+    <!-- AWS Lambda core -->
+    <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-lambda-java-core</artifactId>
+        <version>1.2.3</version>
+    </dependency>
+
+    <!-- AWS Lambda logging -->
+    <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-lambda-java-log4j2</artifactId>
+        <version>1.5.1</version>
+    </dependency>
+
+    <!-- PostgreSQL JDBC Driver -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.7.3</version>
+    </dependency>
+    
+    <!-- https://mvnrepository.com/artifact/org.json/json -->
+	<dependency>
+    	<groupId>org.json</groupId>
+    	<artifactId>json</artifactId>
+    	<version>20230227</version>
+	</dependency>
+	
+	<!-- JWT -->
+	<dependency>
+  		<groupId>io.jsonwebtoken</groupId>
+  		<artifactId>jjwt-api</artifactId>
+  		<version>0.13.0</version>
+	</dependency>
+	<dependency>
+  		<groupId>io.jsonwebtoken</groupId>
+  		<artifactId>jjwt-impl</artifactId>
+  		<version>0.13.0</version>
+  		<scope>runtime</scope>
+	</dependency>
+	<dependency>
+  		<groupId>io.jsonwebtoken</groupId>
+  		<artifactId>jjwt-jackson</artifactId>
+  		<version>0.13.0</version>
+  		<scope>runtime</scope>
+	</dependency>
+  </dependencies>
+  <properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+  </properties>
+  <build>
+    <plugins>
+        <!-- Shade plugin to build a fat JAR -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.3.0</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals><goal>shade</goal></goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+  </build>
+</project>
