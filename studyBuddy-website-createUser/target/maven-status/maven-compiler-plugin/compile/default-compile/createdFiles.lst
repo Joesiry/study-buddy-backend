@@ -1,4 +1,5 @@
 register\RegisterUserHandler.class
+utils\JwtValidationException.class
 utils\JwtHelper.class
 utils\package-info.class
 register\package-info.class
