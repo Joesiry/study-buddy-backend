@@ -9,7 +9,8 @@ import utils.JwtHelper;
 import org.json.JSONObject;
 
 import java.sql.*;
-import java.util.Date;
+import java.time.LocalDate;
+import java.sql.Date;
 import java.util.Map;
 
 /**
@@ -51,11 +52,20 @@ public class CreateCertificationHandler implements RequestHandler<Map<String, Ob
 
 				Claims claims = JwtHelper.parseToken(token);
 				long user_id = Long.parseLong(claims.getSubject()); // Get user_id from token
-				
+
 				int certification_id = body.getInt("certification_id");
 				String status = body.optString("status", null);
-				String earned_on = body.optString("earned_on", null);
-				String expires_on = body.optString("expires_on", null);
+
+				// Turn dates into correct format
+				Date earned_on = null;
+				if (body.has("earned_on") && !body.isNull("earned_on")) {
+					earned_on = Date.valueOf(LocalDate.parse(body.getString("earned_on")));
+				}
+				Date expires_on = null;
+				if (body.has("expires_on") && !body.isNull("expires_on")) {
+					expires_on = Date.valueOf(LocalDate.parse(body.getString("expires_on")));
+				}
+
 				int ce_hours_required = body.optInt("ce_hours_required", 0);
 				int ce_hours_completed = body.optInt("ce_hours_completed", 0);
 
@@ -65,8 +75,16 @@ public class CreateCertificationHandler implements RequestHandler<Map<String, Ob
 					stmt.setLong(1, user_id);
 					stmt.setInt(2, certification_id);
 					stmt.setString(3, status);
-					stmt.setString(4, earned_on);
-					stmt.setString(5, expires_on);
+					if (earned_on != null) {
+						stmt.setDate(4, earned_on);
+					} else {
+						stmt.setNull(4, java.sql.Types.DATE);
+					}
+					if (expires_on != null) {
+						stmt.setDate(5, expires_on);
+					} else {
+						stmt.setNull(5, java.sql.Types.DATE);
+					}
 					stmt.setInt(6, ce_hours_required);
 					stmt.setInt(7, ce_hours_completed);
 					ResultSet rs = stmt.executeQuery();
@@ -127,7 +145,7 @@ public class CreateCertificationHandler implements RequestHandler<Map<String, Ob
 
 		return response.toString();
 	}
-	
+
 	private JSONObject errorResponse(int code, String message) {
 		JSONObject resp = new JSONObject();
 		resp.put("statusCode", code);
