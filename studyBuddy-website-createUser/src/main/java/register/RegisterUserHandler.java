@@ -1,12 +1,17 @@
 package register;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import org.json.JSONObject;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.json.JSONObject;
+
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import utils.HashingHelper;
 import utils.JwtHelper;
@@ -22,8 +27,8 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 		JSONObject responseBody = new JSONObject();
 
 		try (Connection conn = DriverManager.getConnection(
-				System.getenv("DB_URL"), 
-				System.getenv("DB_USER"), 
+				System.getenv("DB_URL"),
+				System.getenv("DB_USER"),
 				System.getenv("DB_PASSWORD"))) {
 
 			// Accept both API Gateway (body as string) and direct JSON (fields at top level)

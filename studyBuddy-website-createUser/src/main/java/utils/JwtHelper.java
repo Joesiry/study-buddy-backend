@@ -1,14 +1,15 @@
 package utils;
 
+import java.util.Date;
+import java.util.Map;
+
+import javax.crypto.SecretKey;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.Map;
 
 /**
  * Utility class for generating and validating JWT tokens.

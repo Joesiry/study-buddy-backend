@@ -7,28 +7,14 @@ import org.json.JSONObject;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
-import java.util.Date;
 
 import utils.HashingHelper;
+import utils.JwtHelper;
 
 /**
  * Registration handler. Creates user, returning proper HTTP status code and response
  */
 public class RegisterUserHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
-
-	private static final SecretKey SECRET_KEY;
-
-	static {
-	    String jwtKey = System.getProperty("JWT_KEY", System.getenv("JWT_KEY"));
-	    if (jwtKey == null || jwtKey.length() < 32) {
-	        throw new IllegalStateException("JWT_KEY must be defined and at least 32 characters long");
-	    }
-	    SECRET_KEY = Keys.hmacShaKeyFor(jwtKey.getBytes());
-	}
-
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
@@ -36,9 +22,9 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 		JSONObject responseBody = new JSONObject();
 
 		try (Connection conn = DriverManager.getConnection(
-				"jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", 
-				"", 
-				"")) {
+				System.getenv("DB_URL"), 
+				System.getenv("DB_USER"), 
+				System.getenv("DB_PASSWORD"))) {
 
 			// Accept both API Gateway (body as string) and direct JSON (fields at top level)
 			JSONObject body;
@@ -68,8 +54,8 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 			String hashedPassword = HashingHelper.hashPassword(password);
 
 			// Insert into database
-			String sql = "INSERT INTO app_user (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?)";
-			try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			String sql = "INSERT INTO app_user (first_name, last_name, username, hashed_password, industry, user_role, bio) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING user_id";
+			try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 				stmt.setString(1, firstName);
 				stmt.setString(2, lastName);
 				stmt.setString(3, username);
@@ -78,21 +64,13 @@ public class RegisterUserHandler implements RequestHandler<Map<String, Object>, 
 				stmt.setString(6, userRole);
 				stmt.setString(7, bio);
 
-				stmt.executeUpdate();
-				
-				ResultSet rs = stmt.getGeneratedKeys();
+				ResultSet rs = stmt.executeQuery();
 				if (rs.next()) {
 					// Retrieve user_id for JWT
 					int userId = rs.getInt("user_id");
 
 					// Generate JWT
-					String jwt = Jwts.builder()
-							.subject(String.valueOf(userId))
-							.claim("username", username)
-							.issuedAt(new Date())
-							.expiration(new Date(System.currentTimeMillis() + 3600_000)) // 1 hour
-							.signWith(SECRET_KEY)
-							.compact();
+					String jwt = JwtHelper.generateToken(userId, username);
 
 					responseBody.put("message", "User registered successfully"); // User registered successfully
 					responseBody.put("username", username);
