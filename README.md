@@ -37,11 +37,27 @@ src/
 
 │ └── RegisterUserHandler.java # User registration + JWT generation
 
+├── user/
+
+│ └── UserInfoHandler.java # Returns user profile information
+
+├── certification/
+
+│ ├── UpdateCertificationHandler.java # Updates certification/user_cert information
+
+│ ├── GetCertificationHandler.java # Returns certification/user_cert information
+
+│ ├── DeleteCertificationHandler.java # Deletes certification/user_cert information
+
+│ └── CreateCertificationHandler.java # Creates certification/user_cert
+
 ├── utils/
 
 │ ├── HashingHelper.java # Password hashing (SHA256)
 
-│ └── JwtHelper.java # JWT signing & validation (*IN DEVELOPMENT*)
+│ └── JwtHelper.java # JWT signing & validation
+
+| ……└── JwtValidationException # Custom JWT related exception
 
 └── … (future)
 
@@ -117,11 +133,176 @@ Backend Lambdas use the token to identify the correct user without exposing pass
 
 ---
 
+## Route JSON Formatting
+
+### POST /certifications
+
+To create a base certification, not connected to a user, you need to put the "type" as "certification". Then you put its attributes in as so, keeping in mind only domain_id and cert_name are NOT NULL. Also returns the ID of the certification: 
+
+{
+
+  "type": "certification",
+  
+  "domain_id": 1,
+  
+  "cert_name": "AWS Cloud Practitioner",
+  
+  "provider": "Amazon",
+  
+  "cert_description": "The AWS Certified Cloud Practitioner validates foundational, high-level understanding of AWS Cloud, services, and terminology.",
+  
+  "renewal_period_months": 36
+  
+}
+
+To create a user_cert connected to a user, you need to put the "type" as "user_certification". Then you put its attributes in as well, only "token" and "certification_id" are NOT NULL. Returns the ID of the user_cert as well:
+
+{
+
+  "type": "user_certification",
+  
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3ODkyNjgzLCJleHAiOjE3NTc4OTYyODN9.91OJ6SFqMu7AJxRKcAGJBsDsslI3PrH_9TurwOexv40",
+  
+  "certification_id": "1",
+  
+  "status": "Valid",
+  
+  "earned_on": "2025-09-14",
+  
+  "expires_on": "2028-09-14",
+  
+  "ce_hours_required": 35,
+  
+  "ce_hours_completed": 35
+  
+}
+
+### GET /certifications
+
+Retrieving the info of all user_certs for a user is also possible by simply passing a user's JWT token like so, you can optionally input a user_cert_id to get only one user_cert. Note that this does join the data from user_cert and certification to return ALL of the attributes connected to a user_cert:
+
+{
+
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3ODkyNjgzLCJleHAiOjE3NTc4OTYyODN9.91OJ6SFqMu7AJxRKcAGJBsDsslI3PrH_9TurwOexv40",
+  
+  "user_cert_id" : 1
+  
+}
+
+### PUT /certifications
+
+To update a certification, you simply pass the same JSON as during creation but with a "certification_id" attribute:
+
+{
+
+  "type": "certification",
+  
+  "certification_id": 1,
+  
+  "domain_id": 1,
+  
+  "cert_name": "AWS Cloud Practitioner",
+  
+  "provider": "Amazon Web Services",
+  
+  "cert_description": "The AWS Certified Cloud Practitioner validates foundational, high-level understanding of AWS Cloud, services, and terminology.",
+  
+  "renewal_period_months": 36
+  
+}
+
+For a user_cert, you do something similar, only adding the user_cert_id to the attributes:
+
+{
+
+  "type": "user_certification",
+  
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3OTc1NTI5LCJleHAiOjE3NTc5NzkxMjl9.s-cOyMkbs0o-5iG7VsIV8uEUE7XZAsSAAWxAJB0MuSk",
+  
+  "user_cert_id": "1",
+  
+  "certification_id": "1",
+  
+  "status": "Valid",
+  
+  "earned_on": "2025-09-11",
+  
+  "expires_on": "2028-09-11",
+  
+  "ce_hours_required": 35,
+  
+  "ce_hours_completed": 35
+  
+}
+
+### DELETE /certifications
+
+Requires a JWT token, the type as "certification" or "user_cert", and then the id of either. Only "user_cert" should be deleted since many user_certs may rely on a certification:
+
+{
+
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU4MDQ0NzI0LCJleHAiOjE3NTgwNDgzMjR9.ZXY50m8BtSWu1p5a3AoF84YsuZLfVSpc9-mO1A_YzM4",
+  
+  "type": "certification",
+  
+  "certification_id": 2
+  
+}
+
+### POST /register
+
+Registers a use but also logs them in, returning a JWT token to be stored by the frontend.
+
+{
+
+  "first_name": "Joe",
+  
+  "last_name": "Mama",
+  
+  "username": "Joemama",
+  
+  "password": "daPassword",
+  
+  "industry" : "exampleIndustry",
+  
+  "user_role" : "exampleRole",
+  
+  "bio" : "please work"
+  
+}
+
+### POST /login
+
+Requires only the username and password, returning a JWT if they match:
+
+{
+
+  "username": "Joemama",
+  
+  "password": "daPassword"
+  
+}
+
+### GET /user
+
+Returns all of the app_user table. Simply pass a user's token and it will return the info like so:
+
+{
+
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3OTc1NTI5LCJleHAiOjE3NTc5NzkxMjl9.s-cOyMkbs0o-5iG7VsIV8uEUE7XZAsSAAWxAJB0MuSk"
+  
+}
+
+
+---
+
 ## HTTP Status Codes
 
-* 201 – User created successfully
+* 200 – Successful action
 
-* 200 – Login successful
+* 201 – Resource created successfully
+
+* 400 - Missing/Unknown
 
 * 401 – Unauthorized (invalid credentials or token)
 
