@@ -237,7 +237,7 @@ For a user_cert, you do something similar, only adding the user_cert_id to the a
 
 ### DELETE /certifications
 
-Requires a JWT token, the type as "certification" or "user_cert", and then the id of either. Only "user_cert" should be deleted since many user_certs may rely on a certification:
+Requires a JWT token, the type as "certification" or "user_cert", and then the id of either. Only "user_cert" should be deleted since many user_certs may rely on a certification. Returns number of rows deleted:
 
 {
 
@@ -285,7 +285,7 @@ Requires only the username and password, returning a JWT if they match:
 
 ### GET /user
 
-Returns all of the app_user table. Simply pass a user's token and it will return the info like so:
+Returns all of the app_user table. Simply pass a user's token and it will return all their info like so:
 
 {
 
