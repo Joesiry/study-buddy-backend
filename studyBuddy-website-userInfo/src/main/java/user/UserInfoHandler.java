@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import io.jsonwebtoken.Claims;
 import utils.JwtHelper;
+import utils.JwtValidationException;
 
 import org.json.JSONObject;
 
@@ -77,6 +78,18 @@ public class UserInfoHandler implements RequestHandler<Map<String, Object>, Stri
 					return errorResponse(404, "User not found").toString();
 				}
 			}
+
+		} catch (JwtValidationException e) {
+		    response = new JSONObject();
+		    response.put("statusCode", e.getStatusCode());
+		    response.put("body", new JSONObject()
+		            .put("error", e.getMessage())
+		            .toString());
+		    
+		    // Log
+		    System.out.println("JWT error: " + e.getMessage());
+		    
+		    return response.toString();
 
 		} catch (Exception e) {
 			response.put("statusCode", 500);

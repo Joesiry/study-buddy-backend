@@ -109,7 +109,7 @@ public class DeleteCertificationHandler implements RequestHandler<Map<String, Ob
                     .put("error", e.getMessage())
                     .toString());
             // Log
-            System.out.println("Error: Token expired");
+            System.out.println("JWT error: ");
             e.printStackTrace();
             
             return response.toString();

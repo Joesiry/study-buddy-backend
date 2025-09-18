@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import io.jsonwebtoken.Claims;
 import utils.JwtHelper;
+import utils.JwtValidationException;
 
 import org.json.JSONObject;
 
@@ -51,6 +52,18 @@ public class UpdateCertificationHandler implements RequestHandler<Map<String, Ob
 			} else {
 				return errorResponse(400, "Unknown type: " + type).toString();
 			}
+
+		} catch (JwtValidationException e) {
+		    response = new JSONObject();
+		    response.put("statusCode", e.getStatusCode());
+		    response.put("body", new JSONObject()
+		            .put("error", e.getMessage())
+		            .toString());
+		    
+		    // Log
+		    System.out.println("JWT error: " + e.getMessage());
+		    
+		    return response.toString();
 
 		} catch (Exception e) {
 			response.put("statusCode", 500);
