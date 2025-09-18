@@ -293,6 +293,30 @@ Returns all of the app_user table. Simply pass a user's token and it will return
   
 }
 
+### PUT /user
+
+Updates user profile information, not including the username and password. Returns the updated user information:
+
+{
+
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU4MjMwODgzLCJleHAiOjE3NTgyMzQ0ODN9.qIBzPbpXPmh2Jughej4wwRzxQ9HsTgSYPNz6vi3lcug",
+  
+  "first_name": "Joe",
+  
+  "last_name": "Mama",
+  
+  "username": "Joemama",
+  
+  "password": "daPassword",
+  
+  "industry" : "exampleIndustry",
+  
+  "user_role" : "exampleRole",
+  
+  "bio" : "This should be updated!"
+  
+}
+
 
 ---
 
