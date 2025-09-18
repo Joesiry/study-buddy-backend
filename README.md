@@ -328,7 +328,9 @@ Updates user profile information, not including the username and password. Retur
 
 * 400 - Missing/Unknown
 
-* 401 – Unauthorized (invalid credentials or token)
+* 401 – Unauthorized (expired token or invalid credentials)
+
+* 403 - Forbidden (invalid token)
 
 * 404 - User not found
 
