@@ -133,7 +133,7 @@ Backend Lambdas use the token to identify the correct user without exposing pass
 
 ---
 
-## Route JSON Formatting
+## Route JSON Body Formatting
 
 ### POST /certifications
 
@@ -179,13 +179,19 @@ To create a user_cert connected to a user, you need to put the "type" as "user_c
 
 ### GET /certifications
 
-Retrieving the info of all user_certs for a user is also possible by simply passing a user's JWT token like so, you can optionally input a user_cert_id to get only one user_cert. Note that this does join the data from user_cert and certification to return ALL of the attributes connected to a user_cert:
+Retrieving the info of all user_certs for a user is also possible by simply passing a user's JWT token through the Authorization header like so, you can optionally put a user_cert_id in the queryStringParameters to get only one user_cert. Note that this does join the data from user_cert and certification to return ALL of the attributes connected to a user_cert:
 
 {
 
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3ODkyNjgzLCJleHAiOjE3NTc4OTYyODN9.91OJ6SFqMu7AJxRKcAGJBsDsslI3PrH_9TurwOexv40",
+  "headers": {
   
-  "user_cert_id" : 1
+   "Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU4NDg5NzA0LCJleHAiOjE3NTg0OTMzMDR9.OVSiTnU-1O400sJJD4U2tUCRytcnKdo5xmrIXyXbbIo"
+    
+  },"queryStringParameters": {
+  
+   "user_cert_id": "1"
+    
+  },
   
 }
 
@@ -285,11 +291,15 @@ Requires only the username and password, returning a JWT if they match:
 
 ### GET /user
 
-Returns all of the app_user table. Simply pass a user's token and it will return all their info like so:
+Returns all of the app_user table. Simply pass a user's token through the Authentication header and it will return all their info like so:
 
 {
 
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3OTc1NTI5LCJleHAiOjE3NTc5NzkxMjl9.s-cOyMkbs0o-5iG7VsIV8uEUE7XZAsSAAWxAJB0MuSk"
+   "headers": {
+   
+   "Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU4NDg5NzA0LCJleHAiOjE3NTg0OTMzMDR9.OVSiTnU-1O400sJJD4U2tUCRytcnKdo5xmrIXyXbbIo"
+  
+  }
   
 }
 
