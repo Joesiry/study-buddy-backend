@@ -14,9 +14,9 @@ import utils.JwtHelper;
 import utils.JwtValidationException;
 
 /**
- * Retrieves certification data tied to the authenticated user.
- * Requires a JWT token in the request body.
- * Optionally filters by user_cert_id if provided.
+ * Retrieves user_cert data tied to the authenticated user.
+ * Requires a JWT token in the request header.
+ * Optionally filters by user_cert_id if provided in query params.
  */
 public class GetCertificationHandler implements RequestHandler<Map<String, Object>, String> {
 
@@ -29,33 +29,32 @@ public class GetCertificationHandler implements RequestHandler<Map<String, Objec
 				System.getenv("DB_USER"),
 				System.getenv("DB_PASSWORD"))) {
 
-			// Accept both API Gateway (body as string) and direct JSON (fields at top level)
-			JSONObject body;
-			Object bodyObj = event.get("body");
-			if (bodyObj instanceof String) {
-				// API Gateway: body is a JSON string
-				body = new JSONObject((String) bodyObj);
-			} else if (bodyObj instanceof Map) {
-				// Local/direct: body is already a map
-				body = new JSONObject((Map<?, ?>) bodyObj);
-			} else if (bodyObj == null) {
-				// No "body" key, treat event itself as the body (for local direct JSON)
-				body = new JSONObject(event);
-			} else {
-				throw new IllegalArgumentException("Invalid event format");
+			// Extract JWT token from headers
+			@SuppressWarnings("unchecked")
+			Map<String, String> headers = (Map<String, String>) event.get("headers");
+			if (headers == null) {
+				return errorResponse(400, "Missing headers").toString();
 			}
 
-			// Extract JWT and decode
-			String token = body.optString("token", null);
+			String token = headers.get("Authorization");
 			if (token == null) {
-				return errorResponse(400, "Missing JWT token").toString();
+				return errorResponse(400, "Missing JWT token in Authorization header").toString();
 			}
 
 			Claims claims = JwtHelper.parseToken(token);
 			long userId = Long.parseLong(claims.getSubject());
 
-			// Optional filter user_cert_id
-			Long userCertId = body.has("user_cert_id") ? body.getLong("user_cert_id") : null;
+			// Optional user_cert_id from query string
+			Long userCertId = null;
+			@SuppressWarnings("unchecked")
+			Map<String, String> queryParams = (Map<String, String>) event.get("queryStringParameters");
+			if (queryParams != null && queryParams.get("user_cert_id") != null) {
+				try {
+					userCertId = Long.parseLong(queryParams.get("user_cert_id"));
+				} catch (NumberFormatException nfe) {
+					return errorResponse(400, "Invalid user_cert_id parameter").toString();
+				}
+			}
 
 			// Build SQL with join
 			String sql = "SELECT uc.user_cert_id, uc.user_id, uc.certification_id, uc.status, " +
