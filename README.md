@@ -137,35 +137,17 @@ Backend Lambdas use the token to identify the correct user without exposing pass
 
 ### POST /certifications
 
-To create a base certification, not connected to a user, you need to put the "type" as "certification". Then you put its attributes in as so, keeping in mind only domain_id and cert_name are NOT NULL. Also returns the ID of the certification: 
+To create a certification connected to a user (user_cert), you put its attributes in as so, keeping in mind that title, uid, and cert_level are NOT NULL. **Requires a JWT token in the Authentication header.** Also returns the ID of the user_cert: 
 
 {
 
-  "type": "certification",
+  "title": "Example Certification",
   
-  "domain_id": 1,
+  "uid": "certification.example",
   
-  "cert_name": "AWS Cloud Practitioner",
+  "description": "This certification is an example",
   
-  "provider": "Amazon",
-  
-  "cert_description": "The AWS Certified Cloud Practitioner validates foundational, high-level understanding of AWS Cloud, services, and terminology.",
-  
-  "renewal_period_months": 36
-  
-}
-
-To create a user_cert connected to a user, you need to put the "type" as "user_certification". Then you put its attributes in as well, only "token" and "certification_id" are NOT NULL. Returns the ID of the user_cert as well:
-
-{
-
-  "type": "user_certification",
-  
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3ODkyNjgzLCJleHAiOjE3NTc4OTYyODN9.91OJ6SFqMu7AJxRKcAGJBsDsslI3PrH_9TurwOexv40",
-  
-  "certification_id": "1",
-  
-  "status": "Valid",
+  "cert_level": "intermediate",
   
   "earned_on": "2025-09-14",
   
@@ -179,7 +161,7 @@ To create a user_cert connected to a user, you need to put the "type" as "user_c
 
 ### GET /certifications
 
-Retrieving the info of all user_certs for a user is also possible by simply passing a user's JWT token through the Authorization header like so, you can optionally put a user_cert_id in the queryStringParameters to get only one user_cert. Note that this does join the data from user_cert and certification to return ALL of the attributes connected to a user_cert:
+Retrieving the info of all user_certs for a user is also possible by simply passing a user's JWT token through the Authorization header like so, you can optionally put a user_cert_id in the queryStringParameters to get only one user_cert:
 
 {
 
@@ -197,43 +179,15 @@ Retrieving the info of all user_certs for a user is also possible by simply pass
 
 ### PUT /certifications
 
-To update a certification, you simply pass the same JSON as during creation but with a "certification_id" attribute:
+To update a user_cert, you pass the "certification_id" attribute along with the attributes to be changed. **Requires a JWT token in the Authentication header.** Note that only the four attributes below can be changed after creation:
 
 {
-
-  "type": "certification",
   
   "certification_id": 1,
   
-  "domain_id": 1,
+  "earned_on": "2025-09-14",
   
-  "cert_name": "AWS Cloud Practitioner",
-  
-  "provider": "Amazon Web Services",
-  
-  "cert_description": "The AWS Certified Cloud Practitioner validates foundational, high-level understanding of AWS Cloud, services, and terminology.",
-  
-  "renewal_period_months": 36
-  
-}
-
-For a user_cert, you do something similar, only adding the user_cert_id to the attributes:
-
-{
-
-  "type": "user_certification",
-  
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU3OTc1NTI5LCJleHAiOjE3NTc5NzkxMjl9.s-cOyMkbs0o-5iG7VsIV8uEUE7XZAsSAAWxAJB0MuSk",
-  
-  "user_cert_id": "1",
-  
-  "certification_id": "1",
-  
-  "status": "Valid",
-  
-  "earned_on": "2025-09-11",
-  
-  "expires_on": "2028-09-11",
+  "expires_on": "2028-09-14",
   
   "ce_hours_required": 35,
   
@@ -241,17 +195,22 @@ For a user_cert, you do something similar, only adding the user_cert_id to the a
   
 }
 
+
 ### DELETE /certifications
 
-Requires a JWT token, the type as "certification" or "user_cert", and then the id of either. Only "user_cert" should be deleted since many user_certs may rely on a certification. Returns number of rows deleted:
+Optionaly can take the user_cert_id of the user_cert to delete a specific user_cert, otherwise deletes all of a user's related rows. **Requires a JWT token in the Authentication header.** Returns number of rows deleted:
 
 {
 
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU4MDQ0NzI0LCJleHAiOjE3NTgwNDgzMjR9.ZXY50m8BtSWu1p5a3AoF84YsuZLfVSpc9-mO1A_YzM4",
+  "headers": {
   
-  "type": "certification",
+   "Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJKb2VtYW1hIiwiaWF0IjoxNzU4NDg5NzA0LCJleHAiOjE3NTg0OTMzMDR9.OVSiTnU-1O400sJJD4U2tUCRytcnKdo5xmrIXyXbbIo"
+    
+  },"queryStringParameters": {
   
-  "certification_id": 2
+   "user_cert_id": "1"
+    
+  },
   
 }
 
