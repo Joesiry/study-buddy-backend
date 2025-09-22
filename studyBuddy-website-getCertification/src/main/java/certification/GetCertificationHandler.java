@@ -57,14 +57,8 @@ public class GetCertificationHandler implements RequestHandler<Map<String, Objec
 			}
 
 			// Build SQL with join
-			String sql = "SELECT uc.user_cert_id, uc.user_id, uc.certification_id, uc.status, " +
-					"uc.earned_on, uc.expires_on, uc.ce_hours_required, uc.ce_hours_completed, " +
-					"c.cert_name, c.provider, c.cert_description, c.renewal_period_months " +
-					"FROM user_cert uc " +
-					"JOIN certification c ON uc.certification_id = c.certification_id " +
-					"WHERE uc.user_id = ?";
-
-			if (userCertId != null) {
+			String sql = "SELECT uc.* FROM user_cert uc WHERE uc.user_id = ?";
+			if (userCertId != null) { // Optional filter
 				sql += " AND uc.user_cert_id = ?";
 			}
 
@@ -76,21 +70,16 @@ public class GetCertificationHandler implements RequestHandler<Map<String, Objec
 				}
 
 				try (ResultSet rs = stmt.executeQuery()) {
+					ResultSetMetaData meta = rs.getMetaData();
+					int columnCount = meta.getColumnCount();
+
 					while (rs.next()) {
 						JSONObject cert = new JSONObject();
-						cert.put("user_cert_id", rs.getLong("user_cert_id"));
-						cert.put("user_id", rs.getLong("user_id"));
-						cert.put("certification_id", rs.getLong("certification_id"));
-						cert.put("status", rs.getString("status"));
-						cert.put("earned_on", rs.getDate("earned_on"));
-						cert.put("expires_on", rs.getDate("expires_on"));
-						cert.put("ce_hours_required", rs.getInt("ce_hours_required"));
-						cert.put("ce_hours_completed", rs.getInt("ce_hours_completed"));
-						// joined fields
-						cert.put("cert_name", rs.getString("cert_name"));
-						cert.put("provider", rs.getString("provider"));
-						cert.put("cert_description", rs.getString("cert_description"));
-						cert.put("renewal_period_months", rs.getInt("renewal_period_months"));
+						for (int i = 1; i <= columnCount; i++) {
+							String columnName = meta.getColumnLabel(i);
+							Object value = rs.getObject(i);
+							cert.put(columnName, value);
+						}
 						results.put(cert);
 					}
 				}
@@ -105,19 +94,19 @@ public class GetCertificationHandler implements RequestHandler<Map<String, Objec
 
 		} catch (JwtValidationException e) {
 			// Expired token
-		    response = new JSONObject();
-		    response.put("statusCode", e.getStatusCode());
-		    response.put("body", new JSONObject()
-		            .put("error", e.getMessage())
-		            .toString());
-		    // Log
-		    System.out.println("JWT error: ");
-		    e.printStackTrace();
-		    
-		    return response.toString();
+			response = new JSONObject();
+			response.put("statusCode", e.getStatusCode());
+			response.put("body", new JSONObject()
+					.put("error", e.getMessage())
+					.toString());
+			// Log
+			System.out.println("JWT error: ");
+			e.printStackTrace();
+
+			return response.toString();
 		} catch (Exception e) {
 			response = errorResponse(500, e.getMessage());
-			
+
 			// Log
 			System.err.println("Error in LoginHandler: " + e.getMessage());
 			e.printStackTrace();
