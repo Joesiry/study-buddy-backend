@@ -26,26 +26,16 @@ public class UserInfoHandler implements RequestHandler<Map<String, Object>, Stri
 				System.getenv("DB_USER"),
 				System.getenv("DB_PASSWORD"))) {
 
-			// Accept both API Gateway (body as string) and direct JSON (fields at top level)
-			JSONObject body;
-			Object bodyObj = event.get("body");
-			if (bodyObj instanceof String) {
-				// API Gateway: body is a JSON string
-				body = new JSONObject((String) bodyObj);
-			} else if (bodyObj instanceof Map) {
-				// Local/direct: body is already a map
-				body = new JSONObject((Map<?, ?>) bodyObj);
-			} else if (bodyObj == null) {
-				// No "body" key, treat event itself as the body (for local direct JSON)
-				body = new JSONObject(event);
-			} else {
-				throw new IllegalArgumentException("Invalid event format");
+			// Extract JWT token from headers
+			@SuppressWarnings("unchecked")
+			Map<String, String> headers = (Map<String, String>) event.get("headers");
+			if (headers == null) {
+				return errorResponse(400, "Missing headers").toString();
 			}
 
-			// Extract JWT and decode
-			String token = body.optString("token", null);
+			String token = headers.get("Authorization");
 			if (token == null) {
-				return errorResponse(400, "Missing JWT token").toString();
+				return errorResponse(400, "Missing JWT token in Authorization header").toString();
 			}
 
 			Claims claims = JwtHelper.parseToken(token);

@@ -42,10 +42,16 @@ public class UpdateUserHandler implements RequestHandler<Map<String, Object>, St
 				throw new IllegalArgumentException("Invalid event format");
 			}
 
-			// Extract JWT and decode
-			String token = body.optString("token", null);
+			// Extract JWT token from headers
+			@SuppressWarnings("unchecked")
+			Map<String, String> headers = (Map<String, String>) event.get("headers");
+			if (headers == null) {
+				return errorResponse(400, "Missing headers").toString();
+			}
+
+			String token = headers.get("Authorization");
 			if (token == null) {
-				return errorResponse(400, "Missing JWT token").toString();
+				return errorResponse(400, "Missing JWT token in Authorization header").toString();
 			}
 
 			Claims claims = JwtHelper.parseToken(token);
