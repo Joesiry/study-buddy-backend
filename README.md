@@ -39,7 +39,9 @@ src/
 
 ├── user/
 
-│ └── UserInfoHandler.java # Returns user profile information
+│ ├── UserInfoHandler.java # Returns user profile information
+
+│ └── UpdateUserHandler.java # Updates user profile information
 
 ├── certification/
 
