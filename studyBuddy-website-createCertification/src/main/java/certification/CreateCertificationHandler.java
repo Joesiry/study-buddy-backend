@@ -53,6 +53,9 @@ public class CreateCertificationHandler implements RequestHandler<Map<String, Ob
 
 			String token = headers.get("Authorization");
 			if (token == null) {
+				token = headers.get("authorization");
+			}
+			if (token == null) {
 				return errorResponse(400, "Missing JWT token in Authorization header").toString();
 			}
 
