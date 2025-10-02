@@ -77,7 +77,7 @@ src/
    - Backend validates password, retrieves `user_id`, and returns a JWT.  
 
 3. **Authorized Requests**  
-   - Frontend includes `Authorization: Bearer <token>` header in subsequent requests.  
+   - Frontend includes `Authorization: <token>` header in subsequent requests.  
    - Backend verifies JWT with the shared secret key (`JWT_KEY`), extracts `user_id`, and performs DB operations for the correct user.  
 
 ---
